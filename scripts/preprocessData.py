@@ -49,6 +49,32 @@ if (df.isna().sum().sum() == 0):
 else:
     print("Dataset corrupted, missing values found")
 
+# --------------------------------
+# --- FEATURE ENGINEERING STEPS --
+# --------------------------------
+# for the moment, we only use EMAs and RSI but it's a part to optimize to get better results
+# need try and see process
+
+# Calculate moving averages
+window_sizes = [10, 20, 50]  # try and adjust
+
+for window_size in window_sizes:
+    column_name = f"SMA_{window_size}"
+    df[column_name] = df['Close'].rolling(window=window_size).mean()
+
+# Calculate RSI
+window_size_rsi = 14  # try and adjust
+
+df['Price Change'] = df['Close'].diff()
+df['Positive Change'] = df['Price Change'].apply(lambda x: x if x > 0 else 0)
+df['Negative Change'] = df['Price Change'].apply(
+    lambda x: abs(x) if x < 0 else 0)
+df['Avg Gain'] = df['Positive Change'].rolling(window=window_size_rsi).mean()
+df['Avg Loss'] = df['Negative Change'].rolling(window=window_size_rsi).mean()
+df['RS'] = df['Avg Gain'] / df['Avg Loss']
+df['RSI'] = 100 - (100 / (1 + df['RS']))
+
+
 # Define the destination folder path
 folder_path = "../data/processed/full"
 
